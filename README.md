@@ -13,6 +13,6 @@ In case you're interested:
 - Optional use of [a container based implementation of Buildroot][docker_buildroot], that provides a fast and convenient way to start working right away and keep multiple and independent instances for different targets at the same time.
 - To manage the above, a Shell script is provided.
 
---
+
 [br2_external]:http://buildroot.uclibc.org/downloads/manual/manual.html#outside-br-custom
 [docker_buildroot]:https://github.com/vidalastudillo/docker-buildroot
