@@ -1,0 +1,32 @@
+config BR2_PACKAGE_BASIC_TESTING_UTILITIES
+    bool "Basic Testing Utilities"
+    default n
+
+    # Network
+    select BR2_PACKAGE_DHCPCD
+
+    # SSH Server
+    select BR2_PACKAGE_DROPBEAR
+
+    # Nano editor
+    select BR2_PACKAGE_NANO if BR2_USE_WCHAR
+
+    # Extra BusyBox
+    select BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
+
+    # System representation
+    select BR2_PACKAGE_NEOFETCH if BR2_USE_MMU \
+        && BR2_PACKAGE_BUSYBOX_SHOW_OTHERS
+
+    # To nicely list hw resources including the serial of the device
+    select BR2_PACKAGE_LSHW
+
+    # To extract info from JSON data (Like the one that can be produced by BR2_PACKAGE_LSHW)
+    select BR2_PACKAGE_JQ
+
+    # Detailed info (ie. to check HDMI)
+    select BR2_PACKAGE_EDID_DECODE
+    select BR2_PACKAGE_READ_EDID
+
+    help
+        Some utilities to inspect and test the hardware

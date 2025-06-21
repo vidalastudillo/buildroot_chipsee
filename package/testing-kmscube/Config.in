@@ -1,0 +1,10 @@
+config BR2_PACKAGE_TESTING_KMSCUBE
+    bool "Video test based on KMSCube"
+    default n
+
+    # Video test
+    select BR2_PACKAGE_KMSCUBE
+
+    help
+        Test based on KMSCUBE
+
