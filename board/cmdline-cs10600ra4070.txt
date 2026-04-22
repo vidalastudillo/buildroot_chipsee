@@ -1,0 +1,1 @@
+root=/dev/mmcblk0p2 rootwait console=tty1 console=ttyAMA0,115200 drm.edid_firmware=HDMI-A-1:edid_cs10600ra4070.bin

@@ -2,43 +2,72 @@
 # Raspberry Pi Firmware configuration file
 #
 # Compatible hardware:
-# Chipsee: PPC-CM4-070 (#CS10600RA4070P)
+#   Chipsee PPC-CM4-070  (#CS10600RA4070P)
 #
-# Tested version:
-# - Raspberry Pi Compute Module 4, 4GB, 32 eMMC, Wireless
+# Kernel  : 6.12 LTS
+# Driver  : Full KMS  (vc4-kms-v3d)
 #
+# Display path: CM4 HDMI-A-1 → HDMI-to-DPI bridge → 7" LCD 1024×600
+#   - No DDC EEPROM on the bridge; EDID is synthetic (edid_cs10600ra4070.bin).
+#   - Timing source: manufacturer hdmi_timings → board/gen_edid.py
+#   - EDID injected at boot via cmdline.txt:
+#       drm.edid_firmware=HDMI-A-1:edid_cs10600ra4070.bin
 # ##############################################################################
 
 
 # ##############################################################################
-# Applicable content from Buildroot original file: config_cm4io_64bit.txt
+# Boot
 # ##############################################################################
-
-# See http://buildroot.org/manual.html#rootfs-custom
-# and http://elinux.org/RPiconfig for a description of config.txt syntax
 
 start_file=start4.elf
 fixup_file=fixup4.dat
-
 kernel=Image
-
-# Disable overscan assuming the display supports displaying the full resolution
-# If the text shown on the screen disappears off the edge, comment this out
-disable_overscan=1
-
-# enable dwc2 USB controller (USB 2.0)
-dtoverlay=dwc2,dr_mode=host
-
-# enable 64bits support
 arm_64bit=1
 
+# USB 2.0
+dtoverlay=dwc2,dr_mode=host
+
 
 # ##############################################################################
-# Applicable content from Chipsee original file: config-cs10600ra4070.txt
+# Graphics — Full KMS
 # ##############################################################################
 
+dtoverlay=vc4-kms-v3d
+
+# Prevent firmware from appending its own video= to cmdline.txt.
+# Required with Full KMS; the DRM driver owns mode-setting entirely.
+disable_fw_kms_setup=1
+
+# hdmi_force_hotplug: required — the HDMI-to-DPI bridge has no HPD line.
+hdmi_force_hotplug=1
+
+# hdmi_drive=2: HDMI signaling level expected by the bridge chip.
+hdmi_drive=2
+
+# NOTE: hdmi_timings / hdmi_group / hdmi_mode / hdmi_ignore_edid are
+# firmware-only parameters and are IGNORED by the kernel under Full KMS.
+# Display timing is provided exclusively via the synthetic EDID in cmdline.txt.
+
+
+# ##############################################################################
 # Audio
+# ##############################################################################
+
 gpio=6=op,dh
+dtparam=audio=on
+
+
+# ##############################################################################
+# Backlight (PWM on GPIO 18, channel 0)
+# ##############################################################################
+
+gpio=18=op,dh
+dtoverlay=pwm-backlight,pin=18,func=2,pwm_0
+
+
+# ##############################################################################
+# Peripheral overlays
+# ##############################################################################
 
 # I2C
 dtoverlay=i2c0,pins_44_45
@@ -60,28 +89,14 @@ dtparam=act_led_trigger=heartbeat
 # SD1
 dtoverlay=sdio,poll_once=off
 
-# Switch to external antenna
+# Switch to external antenna (disabled by default)
 # dtparam=ant2
 
-# Touch: Goodix instead of Chipsee driver
-# dtoverlay=gt9xx,interrupt=20,reset=21
+# Touch
 dtoverlay=goodix,interrupt=20,reset=21
 
-# HDMI
-# TODO: This section contains deprecated parameters. Not working yet.
-gpio=18=op,dh
-dtoverlay=pwm-backlight,pin=18,func=2,pwm_0
-## Follow Can fix some hardware issue
-hdmi_force_hotplug=1
-hdmi_group=2
-hdmi_drive=2
-hdmi_mode=87
-hdmi_timings=1024 0 160 10 160 600 0 12 1 23 0 0 0 60 0 52000000 6
-hdmi_ignore_edid=0xa5000080
-hdmi_pixel_encoding=1
-
-# MCP23008
+# MCP23008 GPIO expander
 dtoverlay=mcp23017,mcp23008,addr=0x20,noints
 
-# MCP2517
+# MCP2517 CAN controller
 dtoverlay=mcp2515-can0,oscillator=8000000,interrupt=16
