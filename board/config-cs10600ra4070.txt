@@ -78,7 +78,6 @@ dtoverlay=i2c-rtc,ds1307,addr=0x32
 # UART
 dtoverlay=miniuart-bt
 enable_uart=1
-core_freq=250
 dtoverlay=uart2
 dtoverlay=uart3
 dtoverlay=uart5
