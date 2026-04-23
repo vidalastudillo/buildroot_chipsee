@@ -92,6 +92,26 @@ def null_descriptor() -> bytes:
     return bytes(d)
 
 
+def build_cea_extension() -> bytes:
+    cea = bytearray(128)
+    cea[0] = 0x02  # CEA-861 extension tag
+    cea[1] = 0x03  # CEA-861 revision 3
+    cea[2] = 0x0A  # DTD offset = 10 (4-byte header + 6-byte VSDB, no DTDs)
+    cea[3] = 0x00  # no underscan, no audio, no YCbCr 4:4:4, no YCbCr 4:2:2
+    # HDMI VSDB (6 bytes): IEEE OUI 0x000C03 = HDMI Licensing LLC
+    # Presence of VSDB makes drm_detect_hdmi_monitor() return true, causing
+    # the vc4 driver to send AVI infoframes with colorspace=RGB.
+    cea[4] = 0x65  # vendor specific tag (3<<5)|5, length=5
+    cea[5] = 0x03  # OUI byte 0
+    cea[6] = 0x0C  # OUI byte 1
+    cea[7] = 0x00  # OUI byte 2
+    cea[8] = 0x10  # physical address high: 1.0.x.x
+    cea[9] = 0x00  # physical address low:  x.x.0.0
+    # bytes 10–126: zeros (no DTDs, no additional data blocks)
+    cea[127] = (-sum(cea[:127])) & 0xFF
+    return bytes(cea)
+
+
 def build_edid(p: dict) -> bytes:
     h_blank = p['h_front_porch'] + p['h_sync_pulse'] + p['h_back_porch']
     v_blank = p['v_front_porch'] + p['v_sync_pulse'] + p['v_back_porch']
@@ -113,8 +133,8 @@ def build_edid(p: dict) -> bytes:
     edid[21]    = max(1, p['h_mm'] // 10)        # cm (rounded)
     edid[22]    = max(1, p['v_mm'] // 10)
     edid[23]    = 0x78                           # gamma 2.2
-    edid[24]    = 0x02                           # preferred timing in DTD1
-    edid[25:35] = b'\x00' * 10                  # chromaticity (unused)
+    edid[24]    = 0x06                           # preferred timing in DTD1 + sRGB color space
+    edid[25:35] = b'\xEE\x91\xA3\x54\x4C\x99\x26\x0F\x50\x54'  # sRGB primaries + D65 white
     edid[35:38] = b'\x00\x00\x00'               # established timings: none
     for i in range(8):                           # standard timings: unused
         edid[38 + i * 2]     = 0x01
@@ -147,10 +167,10 @@ def build_edid(p: dict) -> bytes:
     edid[72:90]   = monitor_name_descriptor(p['name'])
     edid[90:108]  = null_descriptor()
     edid[108:126] = null_descriptor()
-    edid[126]     = 0x00                         # no extension blocks
+    edid[126]     = 0x01                         # one CEA-861 extension follows
     edid[127]     = (-sum(edid[:127])) & 0xFF    # checksum
 
-    return bytes(edid)
+    return bytes(edid) + build_cea_extension()
 
 
 # ---------------------------------------------------------------------------
