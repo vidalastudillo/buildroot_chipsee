@@ -57,6 +57,42 @@ cd ../.. # Assuming you are in externals/chipsee/
 ./externals/chipsee/run.sh make all
 ```
 
+## CS10600RA4070P — Display Pipeline
+
+The CS10600RA4070P routes CM4 HDMI output through an HDMI-to-DPI bridge chip to a 7" 1024×600 panel. Three non-obvious configurations are required that differ from a standard HDMI display.
+
+### Full KMS (`vc4-kms-v3d`)
+
+Chipsee's reference images use `vc4-fkms-v3d` on kernel 5.15. This tree targets kernel 6.12 with Full KMS (`vc4-kms-v3d`). Relevant `config.txt` parameters:
+
+- `dtoverlay=vc4-kms-v3d` — Full KMS driver
+- `disable_fw_kms_setup=1` — prevents the firmware from appending its own `video=` to `cmdline.txt`; under Full KMS the DRM driver owns mode-setting entirely
+- `hdmi_force_hotplug=1` — required because the bridge has no HPD line
+- `hdmi_timings` / `hdmi_group` / `hdmi_mode` are firmware-only parameters silently ignored under Full KMS; display timing is provided exclusively via the synthetic EDID
+
+### Synthetic EDID
+
+The HDMI-to-DPI bridge has no DDC EEPROM, so the kernel cannot negotiate resolution or colorspace with the display. `board/gen_edid.py` generates a synthetic EDID 1.3 binary from the manufacturer timing parameters:
+
+```bash
+python3 board/gen_edid.py          # regenerates rootfs_overlay/lib/firmware/edid_cs10600ra4070.bin
+python3 board/gen_edid.py --list   # show available profiles
+```
+
+The binary is committed to the repository and injected at boot via `cmdline.txt`:
+
+```
+drm.edid_firmware=HDMI-A-1:edid_cs10600ra4070.bin
+```
+
+The EDID includes a CEA-861 extension block with the HDMI Licensing LLC VSDB (OUI `0x000C03`). This causes `drm_detect_hdmi_monitor()` to return `true`, which makes `vc4` send AVI infoframes with `colorspace=RGB` on every frame. Without it, the driver treats the sink as DVI, sends no infoframe, and the bridge defaults to YCbCr — producing severe color corruption (cyan instead of red, purple background).
+
+### Color Quantization Range
+
+The bridge chip expects RGB limited range (16–235), consistent with Chipsee's reference firmware (`hdmi_pixel_encoding=1`). Under Full KMS with `broadcast_rgb=Automatic`, `vc4` sends full range (0–255) for non-CEA modes, causing washed-out colors and a black-on-black console.
+
+The init script `/etc/init.d/S20broadcast_rgb` runs `/usr/bin/invert_display` at boot (source: `board/invert_display.c`), which sets the DRM connector property `Broadcast RGB = 2` (Limited 16:235) via `DRM_IOCTL_MODE_SETPROPERTY` before any DRM client acquires master.
+
 ## Development Conventions
 
 - **Buildroot Targets:** Package names are case-sensitive. Always check `Config.in` and `*.mk` files to determine the exact name before executing rebuild commands (e.g., `make <pkg>-rebuild`).
