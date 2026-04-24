@@ -1,0 +1,102 @@
+# ##############################################################################
+# Raspberry Pi Firmware configuration file
+#
+# Compatible hardware:
+#   Chipsee PPC-CM4-101  (#CS12800RA4101P)
+#
+# Kernel  : 6.12 LTS
+# Driver  : Full KMS  (vc4-kms-v3d)
+#
+# Display path: CM4 HDMI-A-1 → HDMI-to-DPI bridge → 10.1" LCD 1280×800
+#   - No DDC EEPROM on the bridge; EDID is synthetic (edid_cs12800ra4101.bin).
+#   - Timing source: manufacturer hdmi_timings → board/gen_edid.py
+#   - EDID injected at boot via cmdline.txt:
+#       drm.edid_firmware=HDMI-A-1:edid_cs12800ra4101.bin
+# ##############################################################################
+
+
+# ##############################################################################
+# Boot
+# ##############################################################################
+
+start_file=start4.elf
+fixup_file=fixup4.dat
+kernel=Image
+arm_64bit=1
+
+# USB 2.0
+dtoverlay=dwc2,dr_mode=host
+
+
+# ##############################################################################
+# Graphics — Full KMS
+# ##############################################################################
+
+dtoverlay=vc4-kms-v3d
+
+# Prevent firmware from appending its own video= to cmdline.txt.
+# Required with Full KMS; the DRM driver owns mode-setting entirely.
+disable_fw_kms_setup=1
+
+# hdmi_force_hotplug: required — the HDMI-to-DPI bridge has no HPD line.
+hdmi_force_hotplug=1
+
+# hdmi_drive=2: HDMI signaling level expected by the bridge chip.
+hdmi_drive=2
+
+# NOTE: hdmi_timings / hdmi_group / hdmi_mode / hdmi_ignore_edid are
+# firmware-only parameters and are IGNORED by the kernel under Full KMS.
+# Display timing is provided exclusively via the synthetic EDID in cmdline.txt.
+
+
+# ##############################################################################
+# Audio
+# ##############################################################################
+
+gpio=6=op,dh
+dtparam=audio=on
+
+
+# ##############################################################################
+# Backlight (PWM on GPIO 18, channel 0) + LCD Power Enable (GPIO 7)
+# ##############################################################################
+
+gpio=7=op,dh
+gpio=18=op,dh
+dtoverlay=pwm-backlight,pin=18,func=2,pwm_0
+
+
+# ##############################################################################
+# Peripheral overlays
+# ##############################################################################
+
+# I2C
+dtoverlay=i2c0,pins_44_45
+
+# RTC
+dtoverlay=i2c-rtc,ds1307,addr=0x32
+
+# UART
+dtoverlay=miniuart-bt
+enable_uart=1
+dtoverlay=uart2
+dtoverlay=uart3
+dtoverlay=uart5
+
+# LED
+dtparam=act_led_trigger=heartbeat
+
+# SD1
+dtoverlay=sdio,poll_once=off
+
+# Switch to external antenna (disabled by default)
+# dtparam=ant2
+
+# Touch
+dtoverlay=goodix,interrupt=20,reset=21
+
+# MCP23008 GPIO expander
+dtoverlay=mcp23017,mcp23008,addr=0x20,noints
+
+# MCP2517 CAN controller
+dtoverlay=mcp2515-can0,oscillator=8000000,interrupt=16

@@ -1,5 +1,5 @@
 #!/bin/bash
-# By JMVA, VIDAL & ASTUDILLO Ltda, 2025
+# By JMVA, VIDAL & ASTUDILLO Ltda, 2025-2026
 #
 # Script helper to use Buildroot containerized according to:
 # https://github.com/vidalastudillo/docker-buildroot/tree/independent_buildroot

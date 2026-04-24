@@ -5,7 +5,11 @@
 External Buildroot tree for generating minimal Linux images to test [Chipsee Raspberry Pi based hardware](https://chipsee.com/product-category/ipc/arm-ipc/arm-raspberry-pi/) and software.
 
 ## Target Platforms
-- **CS10600RA4070P:** `chipsee_CS10600RA4070P_defconfig`
+
+| Model | Defconfig | Display | Run script |
+|-------|-----------|---------|------------|
+| **CS10600RA4070P** | `chipsee_CS10600RA4070P_defconfig` | 7" 1024×600 | `run-cs10600ra4070p.sh` |
+| **CS12800RA4101P** | `chipsee_CS12800RA4101P_defconfig` | 10.1" 1280×800 | `run-cs12800ra4101p.sh` |
 
 ## Prerequisites
 
@@ -30,36 +34,40 @@ make chipsee_CS10600RA4070P_defconfig
 make savedefconfig
 
 # Build the image
-./externals/chipsee/run.sh make all
+make all
 ```
 
 ### For the **second option** above
 
-When using the container infrastructure referenced, there is a convenient script `run.sh` to perform operations inside the containers. Running without any parameters displays its usage details.
+Each target has a dedicated run script. Running without any parameters displays its usage details.
 
-Currently hardcoded for `CS10600RA4070P`.
+**Important:**
 
-**Important:** 
+- **Wrapper Logic:** All Buildroot commands must be executed through the provided run script to ensure critical variables (like output directories `O=...`) are properly injected. Never run `make` directly.
+- **Working directory:** Due to Docker volume mounting (`$(pwd)`), all run script commands MUST be executed from the **root of the `docker-buildroot` project**, NOT from inside this external tree directory.
+- **Data container:** Each target uses its own Docker data container. Run `init` once per target before the first build.
 
-- **Wrapper Logic:** All Buildroot commands must be executed through the provided `run.sh` script to ensure critical variables (like output directories `O=...`) are properly injected. Never run `make` directly.
-- **Running the helper script** Due to Docker volume mounting (`$(pwd)`), all `run.sh` commands MUST be executed from the **root of the `docker-buildroot` project**, NOT from inside this external tree directory.
-
-Then, its workflow would be something like:
+Workflow for **CS10600RA4070P**:
 
 ```bash
-# 1. Navigate to the project root
-cd ../.. # Assuming you are in externals/chipsee/
-
-# 2. Apply target configuration
-./externals/chipsee/run.sh make chipsee_CS10600RA4070P_defconfig
-
-# 3. Build the image
-./externals/chipsee/run.sh make all
+cd ../..  # from externals/chipsee/
+./externals/chipsee/run-cs10600ra4070p.sh init                    # once only
+./externals/chipsee/run-cs10600ra4070p.sh def                     # apply defconfig
+./externals/chipsee/run-cs10600ra4070p.sh make all
 ```
 
-## CS10600RA4070P — Display Pipeline
+Workflow for **CS12800RA4101P**:
 
-The CS10600RA4070P routes CM4 HDMI output through an HDMI-to-DPI bridge chip to a 7" 1024×600 panel. Three non-obvious configurations are required that differ from a standard HDMI display.
+```bash
+cd ../..  # from externals/chipsee/
+./externals/chipsee/run-cs12800ra4101p.sh init                    # once only
+./externals/chipsee/run-cs12800ra4101p.sh def                     # apply defconfig
+./externals/chipsee/run-cs12800ra4101p.sh make all
+```
+
+## Display Pipeline
+
+All Chipsee CM4 panels route HDMI output through an HDMI-to-DPI bridge chip. Three non-obvious configurations are required that differ from a standard HDMI display. The same pipeline applies to all supported models; display timing is handled per-model by the EDID profile selected in `chipsee-display`.
 
 ### Full KMS (`vc4-kms-v3d`)
 
@@ -75,7 +83,7 @@ Chipsee's reference images use `vc4-fkms-v3d` on kernel 5.15. This tree targets 
 The HDMI-to-DPI bridge has no DDC EEPROM, so the kernel cannot negotiate resolution or colorspace with the display. `board/gen_edid.py` generates a synthetic EDID 1.3 binary from the manufacturer timing parameters. The binary is produced at build time by the `chipsee-display` package and injected at boot via `cmdline.txt`:
 
 ```
-drm.edid_firmware=HDMI-A-1:edid_cs10600ra4070.bin
+drm.edid_firmware=HDMI-A-1:edid_<model>.bin
 ```
 
 The EDID includes a CEA-861 extension block with the HDMI Licensing LLC VSDB (OUI `0x000C03`). This causes `drm_detect_hdmi_monitor()` to return `true`, which makes `vc4` send AVI infoframes with `colorspace=RGB` on every frame. Without it, the driver treats the sink as DVI, sends no infoframe, and the bridge defaults to YCbCr — producing severe color corruption (cyan instead of red, purple background).
@@ -83,8 +91,8 @@ The EDID includes a CEA-861 extension block with the HDMI Licensing LLC VSDB (OU
 `gen_edid.py` can also be used standalone during development:
 
 ```bash
-python3 board/gen_edid.py --list          # show available profiles
-python3 board/gen_edid.py cs10600ra4070   # write binary to rootfs_overlay/lib/firmware/
+python3 board/gen_edid.py --list                # show available profiles
+python3 board/gen_edid.py <profile>             # write binary to rootfs_overlay/lib/firmware/
 ```
 
 ### Color Quantization Range
