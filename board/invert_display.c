@@ -1,6 +1,6 @@
 /*
  * Dump connector properties (values + enum names) and set output_format=RGB,
- * Broadcast RGB=Full via legacy DRM_IOCTL_MODE_SETPROPERTY.
+ * Broadcast RGB=Limited 16:235 via legacy DRM_IOCTL_MODE_SETPROPERTY.
  */
 #include <fcntl.h>
 #include <stdint.h>

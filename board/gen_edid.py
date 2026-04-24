@@ -133,8 +133,8 @@ def build_edid(p: dict) -> bytes:
     edid[21]    = max(1, p['h_mm'] // 10)        # cm (rounded)
     edid[22]    = max(1, p['v_mm'] // 10)
     edid[23]    = 0x78                           # gamma 2.2
-    edid[24]    = 0x06                           # preferred timing in DTD1 + sRGB color space
-    edid[25:35] = b'\xEE\x91\xA3\x54\x4C\x99\x26\x0F\x50\x54'  # sRGB primaries + D65 white
+    edid[24]    = 0x02                           # preferred timing in DTD1
+    edid[25:35] = b'\x00' * 10                  # chromaticity: not specified
     edid[35:38] = b'\x00\x00\x00'               # established timings: none
     for i in range(8):                           # standard timings: unused
         edid[38 + i * 2]     = 0x01
