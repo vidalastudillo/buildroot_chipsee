@@ -1,2 +1,3 @@
+source "$BR2_EXTERNAL_CHIPSEE_BR_PATH/package/chipsee-display/Config.in"
 source "$BR2_EXTERNAL_CHIPSEE_BR_PATH/package/testing-kmscube/Config.in"
 source "$BR2_EXTERNAL_CHIPSEE_BR_PATH/package/testing-utilities/Config.in"

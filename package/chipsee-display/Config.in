@@ -1,0 +1,24 @@
+config BR2_PACKAGE_CHIPSEE_DISPLAY
+	bool "Chipsee display support"
+	depends on BR2_LINUX_KERNEL
+	help
+	  Display pipeline for Chipsee HDMI-to-DPI bridge panels:
+	  - Installs a synthetic EDID for the selected display model
+	  - Installs broadcast-rgb, which sets Broadcast RGB=Limited 16:235
+	    at boot via DRM_IOCTL_MODE_SETPROPERTY
+
+if BR2_PACKAGE_CHIPSEE_DISPLAY
+
+choice
+	prompt "Display model"
+	default BR2_PACKAGE_CHIPSEE_DISPLAY_CS10600RA4070
+
+config BR2_PACKAGE_CHIPSEE_DISPLAY_CS10600RA4070
+	bool "CS10600RA4070 (7\" — 1024x600)"
+
+config BR2_PACKAGE_CHIPSEE_DISPLAY_CS12800RA4101
+	bool "CS12800RA4101 (10.1\" — 1280x800)"
+
+endchoice
+
+endif

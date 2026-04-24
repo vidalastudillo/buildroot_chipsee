@@ -190,6 +190,13 @@ def main():
             print(f"  {name:20s}  {p['h_active']}x{p['v_active']}@{fps:.0f}Hz  —  {p['name']}")
         sys.exit(0)
 
+    # Strip --output <path> if present
+    output_path = None
+    if '--output' in args:
+        idx = args.index('--output')
+        output_path = args[idx + 1]
+        args = args[:idx] + args[idx + 2:]
+
     profile_name = args[0] if args else 'cs10600ra4070'
 
     if profile_name not in PROFILES:
@@ -199,7 +206,9 @@ def main():
     p = PROFILES[profile_name]
     edid = build_edid(p)
 
-    out = Path('rootfs_overlay/lib/firmware') / f'edid_{profile_name}.bin'
+    out = Path(output_path) if output_path else \
+          Path('rootfs_overlay/lib/firmware') / f'edid_{profile_name}.bin'
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(edid)
 
     h_total = int(p['h_active']) + int(p['h_front_porch']) + int(p['h_sync_pulse']) + int(p['h_back_porch'])
