@@ -38,13 +38,13 @@ dtoverlay=vc4-kms-v3d
 # Required with Full KMS; the DRM driver owns mode-setting entirely.
 disable_fw_kms_setup=1
 
-# hdmi_force_hotplug: required — the HDMI-to-DPI bridge has no HPD line.
+# Legacy: Bridge has no HPD line; forces the HDMI port to appear connected.
 hdmi_force_hotplug=1
 
-# hdmi_drive=2: HDMI signaling level expected by the bridge chip.
+# Legacy: HDMI signaling level expected by the HDMI-to-DPI bridge chip.
 hdmi_drive=2
 
-# NOTE: hdmi_timings / hdmi_group / hdmi_mode / hdmi_ignore_edid are
+# NOTE: Legacy hdmi_timings / hdmi_group / hdmi_mode / hdmi_ignore_edid are
 # firmware-only parameters and are IGNORED by the kernel under Full KMS.
 # Display timing is provided exclusively via the synthetic EDID in cmdline.txt.
 
