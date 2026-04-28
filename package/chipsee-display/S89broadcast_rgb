@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# S89broadcast_rgb — set Broadcast RGB=Limited 16:235 via DRM ioctl
+#
+# On BCM2711 (CM4), vc4-drm uses deferred probe and finishes registering
+# its DRM card at ~12 s after kernel start. This init script runs before
+# that point, so broadcast-rgb is launched in the background and retried
+# once per second until it succeeds or the timeout expires.
+#
+# The "S89" position is intentional: udevd is up (S10) and modules are
+# loaded (S11) before this script runs. By S89 the boot sequence has
+# consumed enough time that vc4-drm is typically already ready — the retry
+# loop covers the edge case where it is not.
+#
+case "$1" in
+  start)
+    {
+      i=0
+      while [ $i -lt 30 ]; do
+        broadcast-rgb 2>/dev/null && exit 0
+        sleep 1
+        i=$((i + 1))
+      done
+      echo "S89broadcast_rgb: broadcast-rgb did not succeed after 30 retries" >&2
+    } &
+    ;;
+esac
