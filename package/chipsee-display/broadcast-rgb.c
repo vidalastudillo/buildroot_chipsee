@@ -71,8 +71,27 @@ static int set_prop(int fd, uint32_t obj_id, uint32_t prop_id, uint64_t val)
 
 int main(void)
 {
-    int fd = open("/dev/dri/card1", O_RDWR);
-    if (fd < 0) { perror("open"); return 1; }
+    /* Scan /dev/dri/cardN to find the display driver (first card with connectors).
+     * Minor numbers are assigned in probe-registration order, so the display card
+     * (vc4-drm) is not guaranteed to be card1 across kernel versions or configs. */
+    int fd = -1;
+    char card_path[32];
+    for (int n = 0; n < 8; n++) {
+        snprintf(card_path, sizeof(card_path), "/dev/dri/card%d", n);
+        int try_fd = open(card_path, O_RDWR);
+        if (try_fd < 0) continue;
+        uint32_t tmp_ids[1] = {0};
+        struct drm_mode_card_res tmp_res = {
+            .connector_id_ptr = (uintptr_t)tmp_ids, .count_connectors = 1,
+        };
+        if (ioctl(try_fd, DRM_IOCTL_MODE_GETRESOURCES, &tmp_res) == 0
+                && tmp_res.count_connectors > 0) {
+            fd = try_fd;
+            break;
+        }
+        close(try_fd);
+    }
+    if (fd < 0) { fprintf(stderr, "no drm card with connectors\n"); return 1; }
     ioctl(fd, DRM_IOCTL_DROP_MASTER, 0); /* clear stale master if any */
     if (ioctl(fd, DRM_IOCTL_SET_MASTER, 0)) perror("SET_MASTER (continuing)");
 
