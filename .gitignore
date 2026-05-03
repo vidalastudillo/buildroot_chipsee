@@ -412,3 +412,7 @@ FodyWeavers.xsd
 # Prompts
 ######################
 prompt_template.md
+
+# Assets: Files not to be included in the repository, but used for documentation or other purposes
+######################
+/assets/
