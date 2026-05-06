@@ -53,8 +53,8 @@ Setup (once):
 git clone https://github.com/vidalastudillo/docker-buildroot
 cd docker-buildroot
 
-# 2. Clone a Buildroot source
-git clone https://git.buildroot.net/buildroot --branch=<version> ./buildroot
+# 2. Set up the Buildroot source
+./scripts/bootstrap.sh
 
 # 3. Clone this repo
 git clone https://github.com/vidalastudillo/buildroot_chipsee ./externals/chipsee
@@ -62,6 +62,8 @@ git clone https://github.com/vidalastudillo/buildroot_chipsee ./externals/chipse
 # 4. Build the shared Docker image
 docker buildx build -t va_buildroot .
 ```
+
+See [`BUILDROOT_VERSION`](https://github.com/vidalastudillo/docker-buildroot#buildroot-source-buildroot_version) in `docker-buildroot` for the configured fork and branch, or to use a different one.
 
 Workflow for **CS10600RA4070P**:
 
