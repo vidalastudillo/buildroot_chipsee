@@ -45,23 +45,37 @@ Each target has a dedicated run script. Running without any parameters displays 
 
 - **Wrapper Logic:** All Buildroot commands must be executed through the provided run script to ensure critical variables (like output directories `O=...`) are properly injected. Never run `make` directly.
 - **Working directory:** Due to Docker volume mounting (`$(pwd)`), all run script commands MUST be executed from the **root of the `docker-buildroot` project**, NOT from inside this external tree directory.
-- **Data container:** Each target uses its own Docker data container. Run `init` once per target before the first build.
+
+Setup (once):
+
+```shell
+# 1. Clone docker-buildroot
+git clone https://github.com/vidalastudillo/docker-buildroot
+cd docker-buildroot
+
+# 2. Clone a Buildroot source
+git clone https://git.buildroot.net/buildroot --branch=<version> ./buildroot
+
+# 3. Clone this repo
+git clone https://github.com/vidalastudillo/buildroot_chipsee ./externals/chipsee
+
+# 4. Build the shared Docker image
+docker buildx build -t va_buildroot .
+```
 
 Workflow for **CS10600RA4070P**:
 
 ```bash
-cd ../..  # from externals/chipsee/
-./externals/chipsee/run-cs10600ra4070p.sh init                    # once only
-./externals/chipsee/run-cs10600ra4070p.sh def                     # apply defconfig
+cd docker-buildroot  # must run from project root
+./externals/chipsee/run-cs10600ra4070p.sh def        # apply defconfig
 ./externals/chipsee/run-cs10600ra4070p.sh make all
 ```
 
 Workflow for **CS12800RA4101P**:
 
 ```bash
-cd ../..  # from externals/chipsee/
-./externals/chipsee/run-cs12800ra4101p.sh init                    # once only
-./externals/chipsee/run-cs12800ra4101p.sh def                     # apply defconfig
+cd docker-buildroot  # must run from project root
+./externals/chipsee/run-cs12800ra4101p.sh def        # apply defconfig
 ./externals/chipsee/run-cs12800ra4101p.sh make all
 ```
 
