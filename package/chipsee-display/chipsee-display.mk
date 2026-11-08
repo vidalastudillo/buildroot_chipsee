@@ -34,8 +34,8 @@ endef
 
 define CHIPSEE_DISPLAY_INSTALL_INIT_SYSV
 	$(INSTALL) -D -m 0755 \
-		$(BR2_EXTERNAL_CHIPSEE_BR_PATH)/package/chipsee-display/S20broadcast_rgb \
-		$(TARGET_DIR)/etc/init.d/S20broadcast_rgb
+		$(BR2_EXTERNAL_CHIPSEE_BR_PATH)/package/chipsee-display/S89broadcast_rgb \
+		$(TARGET_DIR)/etc/init.d/S89broadcast_rgb
 endef
 
 $(eval $(generic-package))

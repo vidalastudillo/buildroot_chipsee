@@ -115,7 +115,7 @@ python3 board/gen_edid.py <profile>             # write binary to rootfs_overlay
 
 The bridge chip expects RGB limited range (16–235), consistent with Chipsee's reference firmware (`hdmi_pixel_encoding=1`). Under Full KMS with `broadcast_rgb=Automatic`, `vc4` sends full range (0–255) for non-CEA modes, causing washed-out colors and a black-on-black console.
 
-The `chipsee-display` package compiles `broadcast-rgb` from source and installs the init script `/etc/init.d/S20broadcast_rgb`, which runs it at boot. `broadcast-rgb` sets the DRM connector property `Broadcast RGB = 2` (Limited 16:235) via `DRM_IOCTL_MODE_SETPROPERTY` before any DRM client acquires master.
+The `chipsee-display` package compiles `broadcast-rgb` from source and installs the init script `/etc/init.d/S89broadcast_rgb`, which runs it at boot and retries once per second for up to 30 s, until the display driver `vc4-drm` has registered its card. `broadcast-rgb` sets the DRM connector property `Broadcast RGB = 2` (Limited 16:235) via `DRM_IOCTL_MODE_SETPROPERTY` before any DRM client acquires master.
 
 ## Custom Packages
 
